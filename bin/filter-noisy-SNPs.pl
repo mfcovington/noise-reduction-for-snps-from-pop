@@ -21,18 +21,20 @@ my $cov_min          = 3;
 my $homo_ratio_min   = 0.9;
 my $sample_ratio_min = 0.9;
 my $snp_dir          = "snp_master";
+my $force;
 
 my $options = GetOptions(
     "cov_min=i"          => \$cov_min,
     "homo_ratio_min=i"   => \$homo_ratio_min,
     "sample_ratio_min=i" => \$sample_ratio_min,
     "snp_dir=s"          => \$snp_dir,
+    "force"              => \$force,
 );
 
 my $geno_file_list = \@ARGV;
 my $homo_scores = score_snps( $geno_file_list, $cov_min, $homo_ratio_min );
 filter_snps( $homo_scores, $sample_ratio_min );
-write_snps( $homo_scores, $snp_dir );
+write_snps( $homo_scores, $snp_dir, $force );
 
 exit;
 
@@ -87,15 +89,18 @@ sub filter_snps {
 }
 
 sub write_snps {
-    my ( $homo_scores, $snp_dir ) = @_;
+    my ( $homo_scores, $snp_dir, $force ) = @_;
 
     my @chr_list = keys %{$homo_scores};
 
     for my $chr (@chr_list) {
         my $snp_file = "$snp_dir/polyDB.$chr";
+        my $snp_out_file = "$snp_file.nr";
+        die "\nFile exists: $snp_out_file\nUse '--force' to overwrite.\n"
+            if -e $snp_out_file && !$force;
 
         open my $snp_in_fh,  "<", $snp_file;
-        open my $snp_out_fh, ">", "$snp_file.nr";
+        open my $snp_out_fh, ">", $snp_out_file;
 
         my $header = <$snp_in_fh>;
         print $snp_out_fh $header;
