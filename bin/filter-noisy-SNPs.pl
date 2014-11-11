@@ -12,20 +12,23 @@
 use strict;
 use warnings;
 use autodie;
-use feature 'say';
+use v5.010_000;
 use Getopt::Long;
 use List::Util 'max';
 
 my $cov_min          = 3;
 my $homo_ratio_min   = 0.9;
+my $sample_ratio_min = 0.9;
 
 my $options = GetOptions(
     "cov_min=i"          => \$cov_min,
     "homo_ratio_min=i"   => \$homo_ratio_min,
+    "sample_ratio_min=i" => \$sample_ratio_min,
 );
 
 my $geno_file_list = \@ARGV;
 my $homo_scores = score_snps( $geno_file_list, $cov_min, $homo_ratio_min );
+filter_snps( $homo_scores, $sample_ratio_min );
 
 exit;
 
@@ -62,5 +65,20 @@ sub homo_or_het {
     }
 
     return $score;
+}
+
+sub filter_snps {
+    my ( $homo_scores, $sample_ratio_min ) = @_;
+
+    for my $chr ( keys %{$homo_scores} ) {
+        for my $pos ( keys %{ $$homo_scores{$chr} } ) {
+            my $homo_count = $$homo_scores{$chr}{$pos}{'homo'} // 0;
+            my $het_count  = $$homo_scores{$chr}{$pos}{'het'}  // 0;
+            my $tot_count  = $homo_count + $het_count;
+            my $sample_ratio = $tot_count > 0 ? $homo_count / $tot_count : 0;
+            $$homo_scores{$chr}{$pos}{'keep'}
+                = $sample_ratio >= $sample_ratio_min ? 1 : 0;
+        }
+    }
 }
 
