@@ -1,0 +1,4 @@
+*.genotyped
+*.genotyped.nr
+polyDB.*
+repro-archive/
