@@ -19,16 +19,19 @@ use List::Util 'max';
 my $cov_min          = 3;
 my $homo_ratio_min   = 0.9;
 my $sample_ratio_min = 0.9;
+my $snp_dir          = "snp_master";
 
 my $options = GetOptions(
     "cov_min=i"          => \$cov_min,
     "homo_ratio_min=i"   => \$homo_ratio_min,
     "sample_ratio_min=i" => \$sample_ratio_min,
+    "snp_dir=s"          => \$snp_dir,
 );
 
 my $geno_file_list = \@ARGV;
 my $homo_scores = score_snps( $geno_file_list, $cov_min, $homo_ratio_min );
 filter_snps( $homo_scores, $sample_ratio_min );
+write_snps( $homo_scores, $snp_dir );
 
 exit;
 
@@ -82,3 +85,27 @@ sub filter_snps {
     }
 }
 
+sub write_snps {
+    my ( $homo_scores, $snp_dir ) = @_;
+
+    my @chr_list = keys %{$homo_scores};
+
+    for my $chr (@chr_list) {
+        my $snp_file = "$snp_dir/polyDB.$chr";
+
+        open my $snp_in_fh,  "<", $snp_file;
+        open my $snp_out_fh, ">", "$snp_file.nr";
+
+        my $header = <$snp_in_fh>;
+        print $snp_out_fh $header;
+
+        for my $snp_line (<$snp_in_fh>) {
+            my ($pos) = ( split /\t/, $snp_line )[1];
+            ($pos) = split /\./, $pos;    # for future support of inserts
+            print $snp_out_fh $snp_line if $$homo_scores{$chr}{$pos}{'keep'};
+        }
+
+        close $snp_in_fh;
+        close $snp_out_fh;
+    }
+}
