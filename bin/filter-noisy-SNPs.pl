@@ -11,6 +11,7 @@
 #
 use strict;
 use warnings;
+use Log::Reproducible;
 use autodie;
 use v5.010_000;
 use Getopt::Long;
