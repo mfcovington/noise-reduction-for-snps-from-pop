@@ -1,14 +1,4 @@
 #!/usr/bin/env perl
-# Mike Covington
-# created: 2014-11-10
-#
-# Description: When only one parent is available during SNP identification
-#              based on a population (e.g., Recombinant Inbred Lines), it isn't
-#              possible to do noise-reduction based on parental genotyped.
-#              Therefore, I chose a different approach: identify and ignore
-#              positions that have an over-representation of heterozygosity
-#              in individual lines across the entire population.
-#
 use strict;
 use warnings;
 use Log::Reproducible;
@@ -16,6 +6,38 @@ use autodie;
 use v5.010_000;
 use Getopt::Long;
 use List::Util 'max';
+
+=head1 NAME
+
+filter-noisy-SNPs.pl - Noise-reduction for SNPs derived from a population
+
+=head1 VERSION
+
+Version 0.1.0
+
+=cut
+
+our $VERSION = '0.1.0';
+
+=head1 SYNOPSIS
+
+    perl filter-noisy-SNPs.pl genotyped/*.genotyped
+        --cov_min           Minimum coverage to be considered [3]
+        --homo_ratio_min    Minimum major allele ratio to be considered homozygous [0.9]
+        --sample_ratio_min  Minimum ratio of homozygous samples to pass filter [0.9]
+        --snp_dir           Directory containing [snp_master]
+        --force             Overwrite previously generated noise-reduction output files
+
+=head1 DESCRIPTION
+
+When only one parent is available during SNP identification
+based on a population (e.g., Recombinant Inbred Lines), it isn't
+possible to do noise-reduction based on parental genotyped.
+Therefore, I chose a different approach: identify and ignore
+positions that have an over-representation of heterozygosity
+in individual lines across the entire population.
+
+=cut
 
 my $cov_min          = 3;
 my $homo_ratio_min   = 0.9;
@@ -115,3 +137,28 @@ sub write_snps {
         close $snp_out_fh;
     }
 }
+
+=head1 AUTHOR
+
+Michael F. Covington, <mfcovington@gmail.com>
+
+=head1 SEE ALSO
+
+L<https://github.com/mfcovington/snps-from-rils>
+
+=head1 SOURCE AVAILABILITY
+
+The source code is on Github:
+L<https://github.com/mfcovington/noise-reduction-for-snps-from-pop>
+
+=head1 BUGS
+
+Please report any bugs or feature requests at
+L<https://github.com/mfcovington/noise-reduction-for-snps-from-pop/issues>.
+
+=head1 LICENSE
+
+This is released under the Artistic
+License. See L<perlartistic>.
+
+=cut
